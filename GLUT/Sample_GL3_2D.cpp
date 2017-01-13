@@ -532,7 +532,13 @@ void draw ()
   glm::vec3 target (0, 0, 0);
   // Up - Up vector defines tilt of camera.  Don't change unless you are sure!!
   glm::vec3 up (0, 1, 0);
-
+   GLfloat lineVertices[]=
+   {
+   	 200,100,0,
+   	 100,300,0
+   };
+   glVertexPointer(3,GL_FLOAT,0,lineVertices);
+   glDrawArrays(GL_LINES,0,2);
   // Compute Camera matrix (view)
   // Matrices.view = glm::lookAt( eye, target, up ); // Rotating Camera for 3D
   //  Don't change unless you are sure!!
@@ -562,7 +568,7 @@ void draw ()
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
   // draw3DObject draws the VAO given to it using current MVP matrix
-//  draw3DObject(triangle);
+  draw3DObject(triangle);
 
   Matrices.model = glm::mat4(1.0f);
 
