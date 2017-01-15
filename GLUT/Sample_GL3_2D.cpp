@@ -233,6 +233,7 @@ map <string,Sprite>  red_brick;
 map <string,Sprite>  green_brick;
 map <string,Sprite>  black_brick;
 map <string,Sprite>  laser;
+map <string,Sprite> wall;
 float triangle_rot_dir = 1;
 float rectangle_rot_dir = 1;
 bool triangle_rot_status = true;
@@ -332,9 +333,22 @@ void reshapeWindow (int width, int height)
     Matrices.projection = glm::ortho(-4.0f, 4.0f, -4.0f, 4.0f, 0.1f, 500.0f);
 }
 
-VAO *triangle, *rectangle;
+VAO *triangle, *rectangle, * line;
 
-// Creates the triangle object used in this sample code
+// Creates the  object used in this sample code
+void drawline(double x1,double y1,double x2,double y2,COLOR A)
+{
+	static const GLfloat vertex_buffer_data [] = {
+    x1, y1,0, // vertex 0
+    x2, y2,0, // vertex 1
+  };
+  static const GLfloat color_buffer_data [] = {
+    A.r, A.g,A.b, // color 0
+    A.r,A.g,A.b, // color 1
+  };
+
+
+}
 void createTriangle ()
 {
   /* ONLY vertices between the bounds specified in glm::ortho will be visible on screen */
@@ -356,7 +370,7 @@ void createTriangle ()
   triangle = create3DObject(GL_TRIANGLES, 3, vertex_buffer_data, color_buffer_data, GL_LINE);
 }
 
-void createRectangle (string name, float weight, COLOR colorA, COLOR colorB, COLOR colorC, COLOR colorD, float x, float y, float height, float width, string component)
+void createRectangle (string name, COLOR colorA, COLOR colorB, COLOR colorC, COLOR colorD, float x, float y, float height, float width, string component)
 {
     // GL3 accepts only Triangles. Quads are not supported
     float w=width/2,h=height/2;
@@ -396,116 +410,26 @@ void createRectangle (string name, float weight, COLOR colorA, COLOR colorB, COL
     vishsprite.y_speed=0;
     vishsprite.fixed=0;
     vishsprite.radius=(sqrt(height*height+width*width))/2;
-  //  vishsprite.friction=0.4;
-  //  vishsprite.health=100;
- //   vishsprite.weight=weight;
-    //All the different layers
-/*    if(component=="cannon")
-        cannonObjects[name]=vishsprite;
-    else if(component=="background")
-        backgroundObjects[name]=vishsprite;
-    else if(component=="goal")
-        goalObjects[name]=vishsprite;
-    else if(component=="pig1")
-        pig1Objects[name]=vishsprite;
-    else if(component=="pig2")
-        pig2Objects[name]=vishsprite;
-    else if(component=="pig3")
-        pig3Objects[name]=vishsprite;
-    else if(component=="pig4")
-        pig4Objects[name]=vishsprite;
-    else if(component=="char1")
-        char1Objects[name]=vishsprite;
-    else if(component=="char2")
-        char2Objects[name]=vishsprite;
-    else if(component=="char3")
-        char3Objects[name]=vishsprite;
-    else if(component=="char4")
-        char4Objects[name]=vishsprite;
-    else if(component=="charscore1")
-        charscoreObjects1[name]=vishsprite;
-    else if(component=="charscore2")
-        charscoreObjects2[name]=vishsprite;
-    else if(component=="charscore3")
-        charscoreObjects3[name]=vishsprite;
-    else if(component=="scorelabel")
-        scoreLabelObjects[name]=vishsprite;
-    else if(component=="endlabel")
-        endLabelObjects[name]=vishsprite;
-    else if(component=="timelabel")
-        timerObjects[name]=vishsprite;
-    else
-        objects[name]=vishsprite;*/
+    if(component=="green_bucket")
+    {
+    	green_bucket[name]=vishsprite;
+    }
+    if(component=="red_bucket")
+    {
+    	red_bucket[name]=vishsprite;
+    }
+    if(component=="wall")
+    {
+    	wall[name]=vishsprite;
+    }
+    if(component=="red_brick")
+    {
+    	red_brick[name]=vishsprite;
+    }
+    if(component=="laser")
+    	laser[name]=vishsprite;
 }
 
-void createCircle (string name, float weight, COLOR color, float x, float y, float r, int NoOfParts, string component, int fill)
-{
-    int parts = NoOfParts;
-    float radius = r;
-    GLfloat vertex_buffer_data[parts*9];
-    GLfloat color_buffer_data[parts*9];
-    int i,j;
-    float angle=(2*M_PI/parts);
-    float current_angle = 0;
-    for(i=0;i<parts;i++){
-        for(j=0;j<3;j++){
-            color_buffer_data[i*9+j*3]=color.r;
-            color_buffer_data[i*9+j*3+1]=color.g;
-            color_buffer_data[i*9+j*3+2]=color.b;
-        }
-        vertex_buffer_data[i*9]=0;
-        vertex_buffer_data[i*9+1]=0;
-        vertex_buffer_data[i*9+2]=0;
-        vertex_buffer_data[i*9+3]=radius*cos(current_angle);
-        vertex_buffer_data[i*9+4]=radius*sin(current_angle);
-        vertex_buffer_data[i*9+5]=0;
-        vertex_buffer_data[i*9+6]=radius*cos(current_angle+angle);
-        vertex_buffer_data[i*9+7]=radius*sin(current_angle+angle);
-        vertex_buffer_data[i*9+8]=0;
-        current_angle+=angle;
-    }
-    VAO* circle;
-    if(fill==1)
-        circle = create3DObject(GL_TRIANGLES, (parts*9)/3, vertex_buffer_data, color_buffer_data, GL_FILL);
-    else
-        circle = create3DObject(GL_TRIANGLES, (parts*9)/3, vertex_buffer_data, color_buffer_data, GL_LINE);
-    Sprite vishsprite = {};
-    vishsprite.color = color;
-    vishsprite.name = name;
-    vishsprite.object = circle;
-    vishsprite.x=x;
-    vishsprite.y=y;
-    vishsprite.height=2*r; //Height of the sprite is 2*r
-    vishsprite.width=2*r; //Width of the sprite is 2*r
- //   vishsprite.status=1;
- //   vishsprite.inAir=0;
-    vishsprite.x_speed=0;
-    vishsprite.y_speed=0;
-    vishsprite.radius=r;
-  //  vishsprite.fixed=0;
-  //  vishsprite.friction=0.4;
-  //  vishsprite.health=100;
-  //  vishsprite.weight=weight;
-    /*if(component=="cannon")
-        cannonObjects[name]=vishsprite;
-    else if(component=="coin")
-        coins[name]=vishsprite;
-    else if(component=="background")
-        backgroundObjects[name]=vishsprite;
-    else if(component=="goal")
-        goalObjects[name]=vishsprite;
-    else if(component=="pig1")
-        pig1Objects[name]=vishsprite;
-    else if(component=="pig2")
-        pig2Objects[name]=vishsprite;
-    else if(component=="pig3")
-        pig3Objects[name]=vishsprite;
-    else if(component=="pig4")
-        pig4Objects[name]=vishsprite;
-    else
-        objects[name]=vishsprite;
-        */
-}
 
 
 
@@ -539,6 +463,7 @@ void draw ()
    };
    glVertexPointer(3,GL_FLOAT,0,lineVertices);
    glDrawArrays(GL_LINES,0,2);
+   glDisableClientState(GL_VERTEX_ARRAY);
   // Compute Camera matrix (view)
   // Matrices.view = glm::lookAt( eye, target, up ); // Rotating Camera for 3D
   //  Don't change unless you are sure!!
@@ -579,15 +504,15 @@ void draw ()
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
   // draw3DObject draws the VAO given to it using current MVP matrix
-//  draw3DObject(rectangle);
+  draw3DObject(rectangle);
 
   // Swap the frame buffers
   glutSwapBuffers ();
 
   // Increment angles
-  float increments = 1;
+// ! float increments = 1;
 
-  rectangle_tranlation+=increments*0.01;
+ // rectangle_tranlation+=increments*0.01;
   //camera_rotation_angle++; // Simulating camera rotation
  // triangle_rotation = triangle_rotation + increments*triangle_rot_dir*triangle_rot_status;
  // rectangle_rotation = rectangle_rotation + increments*rectangle_rot_dir*rectangle_rot_status;
@@ -624,7 +549,7 @@ void initGLUT (int& argc, char** argv, int width, int height)
     }
 
     // register glut callbacks
-    glutKeyboardFunc (keyboardDown);
+//    glutKeyboardFunc (keyboardDown);
     glutKeyboardUpFunc (keyboardUp);
 
     glutSpecialFunc (keyboardSpecialDown);
@@ -672,8 +597,10 @@ void addGLUTMenus ()
 void initGL (int width, int height)
 {
 	// Create the models
-	createTriangle (); // Generate the VAO, VBOs, vertices data & copy into the array buffer
-
+	createTriangle ();
+ // Generate the VAO, VBOs, vertices data & copy into the array buffer
+	
+    
 	// Create and compile our GLSL program from the shaders
 	programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
 	// Get a handle for our "MVP" uniform
@@ -688,7 +615,15 @@ void initGL (int width, int height)
 
 	glEnable (GL_DEPTH_TEST);
 	glDepthFunc (GL_LEQUAL);
-
+	COLOR As;
+	As.r=1.0;
+	As.g=0;
+	As.b=0;
+//	createRectangle("red_bucket",As,As,As,As,1,1,2,2,"red_bucket");
+ //   As.r=0;
+//	As.g=1.0;
+//	As.b=0;
+//	createRectangle("green_bucket",As,As,As,As,4,4,2,2,"green_bucket");
 //	createRectangle ();
 
 	cout << "VENDOR: " << glGetString(GL_VENDOR) << endl;
