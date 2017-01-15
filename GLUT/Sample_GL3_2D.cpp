@@ -431,8 +431,6 @@ void createRectangle (string name, COLOR colorA, COLOR colorB, COLOR colorC, COL
 }
 
 
-
-
 float camera_rotation_angle = 90;
 float rectangle_rotation = 0;
 float triangle_rotation = 0;
@@ -497,14 +495,14 @@ void draw ()
 
   Matrices.model = glm::mat4(1.0f);
 
-  glm::mat4 translateRectangle = glm::translate (glm::vec3(rectangle_tranlation, -1, 0));        // glTranslatef
+  glm::mat4 translateRectangle = glm::translate (glm::vec3(-2,-3.5, 0));        // glTranslatef
   glm::mat4 rotateRectangle = glm::rotate((float)(rectangle_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
   Matrices.model *= (translateRectangle * rotateRectangle);
   MVP = VP * Matrices.model;
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
   // draw3DObject draws the VAO given to it using current MVP matrix
-  draw3DObject(rectangle);
+  draw3DObject(red_bucket["red_bucket"].object);
 
   // Swap the frame buffers
   glutSwapBuffers ();
@@ -619,11 +617,11 @@ void initGL (int width, int height)
 	As.r=1.0;
 	As.g=0;
 	As.b=0;
-//	createRectangle("red_bucket",As,As,As,As,1,1,2,2,"red_bucket");
- //   As.r=0;
-//	As.g=1.0;
-//	As.b=0;
-//	createRectangle("green_bucket",As,As,As,As,4,4,2,2,"green_bucket");
+	createRectangle("red_bucket",As,As,As,As,0,0,0.55,0.55,"red_bucket");
+    As.r=0;
+	As.g=1.0;
+	As.b=0;
+	createRectangle("green_bucket",As,As,As,As,4,4,1,2,"green_bucket");
 //	createRectangle ();
 
 	cout << "VENDOR: " << glGetString(GL_VENDOR) << endl;
