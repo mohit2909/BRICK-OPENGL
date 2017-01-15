@@ -491,8 +491,8 @@ void draw ()
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
   // draw3DObject draws the VAO given to it using current MVP matrix
-  draw3DObject(triangle);
 
+ { 
   Matrices.model = glm::mat4(1.0f);
 
   glm::mat4 translateRectangle = glm::translate (glm::vec3(-2.0f,-3.3f, 0.0f));        // glTranslatef
@@ -503,8 +503,73 @@ void draw ()
 
   // draw3DObject draws the VAO given to it using current MVP matrix
   draw3DObject(red_bucket["red_bucket"].object);
+}
+{
+  Matrices.model = glm::mat4(1.0f);
 
+  glm::mat4 translateRectangle = glm::translate (glm::vec3(2.0f,-3.3f, 0.0f));        // glTranslatef
+  glm::mat4 rotateRectangle = glm::rotate((float)(rectangle_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
+  Matrices.model *= (translateRectangle * rotateRectangle);
+  MVP = VP * Matrices.model;
+  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+
+  // draw3DObject draws the VAO given to it using current MVP matrix
+  draw3DObject(green_bucket["green_bucket"].object);
   // Swap the frame buffers
+ }
+ {
+ 	Matrices.model = glm::mat4(1.0f);
+
+  glm::mat4 translateRectangle = glm::translate (glm::vec3(-3.98f,0.0f, 0.0f));        // glTranslatef
+  glm::mat4 rotateRectangle = glm::rotate((float)(0.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
+  Matrices.model *= (translateRectangle * rotateRectangle);
+  MVP = VP * Matrices.model;
+  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+  draw3DObject(wall["left_wall"].object);
+ }
+ {
+ 	Matrices.model = glm::mat4(1.0f);
+
+  glm::mat4 translateRectangle = glm::translate (glm::vec3(3.98f,0.0f, 0.0f));        // glTranslatef
+  glm::mat4 rotateRectangle = glm::rotate((float)(0.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
+  Matrices.model *= (translateRectangle * rotateRectangle);
+  MVP = VP * Matrices.model;
+  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+  draw3DObject(wall["right_wall"].object);
+
+ }
+ {
+ 	Matrices.model = glm::mat4(1.0f);
+
+  glm::mat4 translateRectangle = glm::translate (glm::vec3(0.0f,-3.9f, 0.0f));        // glTranslatef
+  glm::mat4 rotateRectangle = glm::rotate((float)(0.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
+  Matrices.model *= (translateRectangle * rotateRectangle);
+  MVP = VP * Matrices.model;
+  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+  draw3DObject(wall["bottom_wall"].object);
+}
+{
+	Matrices.model = glm::mat4(1.0f);
+
+  glm::mat4 translateRectangle = glm::translate (glm::vec3(-3.78f, 0.0f, 0.0f));        // glTranslatef
+  glm::mat4 rotateRectangle = glm::rotate((float)(0.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
+  Matrices.model *= (translateRectangle * rotateRectangle);
+  MVP = VP * Matrices.model;
+  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+  draw3DObject(laser["non-rotating"].object);
+
+}
+{
+	Matrices.model = glm::mat4(1.0f);
+
+  glm::mat4 translateRectangle = glm::translate (glm::vec3(-3.64f,0.0f, 0.0f));        // glTranslatef
+  glm::mat4 rotateRectangle = glm::rotate((float)(1.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
+  Matrices.model *= (translateRectangle * rotateRectangle);
+  MVP = VP * Matrices.model;
+  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+  draw3DObject(laser["rotating"].object);
+
+}
   glutSwapBuffers ();
 
   // Increment angles
@@ -595,7 +660,6 @@ void addGLUTMenus ()
 void initGL (int width, int height)
 {
 	// Create the models
-	createTriangle ();
  // Generate the VAO, VBOs, vertices data & copy into the array buffer
 	
     
@@ -619,11 +683,28 @@ void initGL (int width, int height)
 	As.b=0;
 	createRectangle("red_bucket",As,As,As,As,0,0,1.00,0.75,"red_bucket");
     As.r=0;
-	As.g=1.0;
+	As.g=0.5;
 	As.b=0;
-	createRectangle("green_bucket",As,As,As,As,4,4,1,2,"green_bucket");
-//	createRectangle ();
+	createRectangle("green_bucket",As,As,As,As,0,0,1.00,0.75,"green_bucket");
+	As.r=0.5;
+	As.g=0.5;
+	As.b=0.5;
+	createRectangle("left_wall",As,As,As,As,0,0,8.1,0.1,"wall");
+	createRectangle("bottom_wall",As,As,As,As,0,0,0.2,16.1,"wall");
+	createRectangle("right_wall",As,As,As,As,0,0,8.1,0.1,"wall");
+	As.r=0.0;
+	As.g=0.0;
+	As.b=0.7;
+	createRectangle("non-rotating",As,As,As,As,0,0,0.6,0.3,"laser");
+	createRectangle("rotating",As,As,As,As,0,0,0.1,0.45,"laser");
 
+	As.r=0.0;
+	As.g=0.0;
+	As.b=0.5;
+	createRectangle("miror1",As,As,As,As,0,0,0.05,0.9,"mirror")
+	createRectangle("miror2",As,As,As,As,0,0,0.05,0.9,"mirror")
+	createRectangle("miror3",As,As,As,As,0,0,0.05,0.9,"mirror")
+	createRectangle("miror4",As,As,As,As,0,0,0.05,0.9,"mirror")
 	cout << "VENDOR: " << glGetString(GL_VENDOR) << endl;
 	cout << "RENDERER: " << glGetString(GL_RENDERER) << endl;
 	cout << "VERSION: " << glGetString(GL_VERSION) << endl;
@@ -640,7 +721,6 @@ int main (int argc, char** argv)
     addGLUTMenus ();
 
 	initGL (width, height);
-	cout << score ;
     glutMainLoop ();
 
     return 0;
