@@ -495,7 +495,7 @@ void draw ()
 
   Matrices.model = glm::mat4(1.0f);
 
-  glm::mat4 translateRectangle = glm::translate (glm::vec3(-2,-3.5, 0));        // glTranslatef
+  glm::mat4 translateRectangle = glm::translate (glm::vec3(-2.0f,-3.3f, 0.0f));        // glTranslatef
   glm::mat4 rotateRectangle = glm::rotate((float)(rectangle_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
   Matrices.model *= (translateRectangle * rotateRectangle);
   MVP = VP * Matrices.model;
@@ -617,7 +617,7 @@ void initGL (int width, int height)
 	As.r=1.0;
 	As.g=0;
 	As.b=0;
-	createRectangle("red_bucket",As,As,As,As,0,0,0.55,0.55,"red_bucket");
+	createRectangle("red_bucket",As,As,As,As,0,0,1.00,0.75,"red_bucket");
     As.r=0;
 	As.g=1.0;
 	As.b=0;
