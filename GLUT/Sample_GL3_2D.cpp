@@ -6,7 +6,7 @@
 #include <GL/glew.h>
 #include <GL/glu.h>
 #include <GL/freeglut.h>
-
+#include <ctime>
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
@@ -224,11 +224,8 @@ long int score=0;
 bool game_over=false;
 map <string,Sprite> red_bucket;
 map <string,Sprite> green_bucket;
-map <string,Sprite>  mirror1;
-map <string,Sprite>  mirror2;
-map <string,Sprite>  mirror3;
-map <string,Sprite>  mirror4;
-map <string,Sprite>  scorecard;
+map <string,Sprite>  mirror;
+map <string,Sprite> Scorecard;
 map <string,Sprite>  red_brick;
 map <string,Sprite>  green_brick;
 map <string,Sprite>  black_brick;
@@ -236,6 +233,10 @@ map <string,Sprite>  laser;
 map <string,Sprite> wall;
 float triangle_rot_dir = 1;
 float rectangle_rot_dir = 1;
+float laser_movement=0;
+float laser_rotatation=0;
+float red_bucket_movement=0;
+float green_bucket_movement=0;
 bool triangle_rot_status = true;
 bool rectangle_rot_status = true;
 /*pair<float,float> moveObject(string name, float dx, float dy) {
@@ -252,7 +253,30 @@ void keyboardDown (unsigned char key, int x, int y)
         case 'Q':
         case 'q':
         case 27: //ESC
-            exit (0);
+         {
+          	exit (0);
+            break;
+        }
+         case 'S':
+         case 's':
+         	laser_movement+=0.1;
+         	laser["rotating"].y+=.1;
+         	laser["non-rotating"].y+=.1;
+         	break;
+         
+         case 'F':
+         case 'f':
+         {
+         	laser_movement-=0.1;
+         	if(laser_movement<-2.1)
+         	{
+         		laser_movement=-2.1;
+         	}
+         	laser["rotating"].y=laser_movement;
+         	laser["non-rotating"].y=laser_movement;
+         	break;
+         }
+      
         default:
             break;
     }
@@ -270,6 +294,56 @@ void keyboardUp (unsigned char key, int x, int y)
         case 'P':
             triangle_rot_status = !triangle_rot_status;
             break;
+         case 'S':
+         case 's':
+         {
+         	laser_movement=laser_movement+0.1;
+         	if(laser_movement>3.0)
+         	{
+         		laser_movement=3.0;
+         	}
+         	laser["rotating"].y=laser_movement;
+         	laser["non-rotating"].y=laser_movement;
+         	break;
+         }
+         case 'F':
+         case 'f':
+         {
+         	laser_movement-=0.1;
+         	if(laser_movement<-2.1)
+         	{
+         		laser_movement=-2.1;
+         	}
+         	laser["rotating"].y=laser_movement;
+         	laser["non-rotating"].y=laser_movement;
+         	break;
+         }
+         case 'A':
+         case 'a':
+         {
+         	laser_rotatation-=0.1;
+         	if(laser_rotatation<-0.8)
+         	{
+         		laser_rotatation=-0.8;
+         	}
+        // 	laser["rotating"].y=laser_movement;
+         //	laser["non-rotating"].y=laser_movement;
+         	break;
+         }
+         case 'D':
+         case 'd':
+         {
+         	laser_rotatation+=0.1;
+         	if(laser_rotatation>0.8)
+         	{
+         		laser_rotatation=0.8;
+         	}
+        // 	laser["rotating"].y=laser_movement;
+         //	laser["non-rotating"].y=laser_movement;
+         	break;
+         }
+        
+        
         case 'x':
             // do something
             break;
@@ -286,6 +360,37 @@ void keyboardSpecialDown (int key, int x, int y)
 /* Executed when a special key is released */
 void keyboardSpecialUp (int key, int x, int y)
 {
+	switch(key)
+	{
+		case GLUT_KEY_LEFT:
+		{
+			if(glutGetModifiers()== GLUT_ACTIVE_CTRL)
+			{
+				red_bucket_movement-=0.2;
+			}
+			if(glutGetModifiers()== GLUT_ACTIVE_SHIFT)
+			{
+				green_bucket_movement-=0.2;
+			}
+			
+			break;
+
+		}
+		case GLUT_KEY_RIGHT:
+		{
+			if(glutGetModifiers()== GLUT_ACTIVE_CTRL)
+			{
+				red_bucket_movement+=0.2;
+			}
+			if(glutGetModifiers()== GLUT_ACTIVE_SHIFT)
+			{
+				green_bucket_movement+=0.2;
+			}
+			break;
+		}
+		default:
+			break;
+	}
 }
 
 /* Executed when a mouse button 'button' is put into state 'state'
@@ -303,6 +408,8 @@ void mouseClick (int button, int state, int x, int y)
                 rectangle_rot_dir *= -1;
             }
             break;
+
+
         default:
             break;
     }
@@ -428,6 +535,8 @@ void createRectangle (string name, COLOR colorA, COLOR colorB, COLOR colorC, COL
     }
     if(component=="laser")
     	laser[name]=vishsprite;
+    if(component=="mirror")
+    	mirror[name]=vishsprite;
 }
 
 
@@ -495,7 +604,7 @@ void draw ()
  { 
   Matrices.model = glm::mat4(1.0f);
 
-  glm::mat4 translateRectangle = glm::translate (glm::vec3(-2.0f,-3.3f, 0.0f));        // glTranslatef
+  glm::mat4 translateRectangle = glm::translate (glm::vec3(-2.0f+red_bucket_movement,-3.3f, 0.0f));        // glTranslatef
   glm::mat4 rotateRectangle = glm::rotate((float)(rectangle_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
   Matrices.model *= (translateRectangle * rotateRectangle);
   MVP = VP * Matrices.model;
@@ -507,7 +616,7 @@ void draw ()
 {
   Matrices.model = glm::mat4(1.0f);
 
-  glm::mat4 translateRectangle = glm::translate (glm::vec3(2.0f,-3.3f, 0.0f));        // glTranslatef
+  glm::mat4 translateRectangle = glm::translate (glm::vec3(2.0f+green_bucket_movement,-3.3f, 0.0f));        // glTranslatef
   glm::mat4 rotateRectangle = glm::rotate((float)(rectangle_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
   Matrices.model *= (translateRectangle * rotateRectangle);
   MVP = VP * Matrices.model;
@@ -551,7 +660,7 @@ void draw ()
 {
 	Matrices.model = glm::mat4(1.0f);
 
-  glm::mat4 translateRectangle = glm::translate (glm::vec3(-3.78f, 0.0f, 0.0f));        // glTranslatef
+  glm::mat4 translateRectangle = glm::translate (glm::vec3(-3.78f, laser_movement, 0.0f));        // glTranslatef
   glm::mat4 rotateRectangle = glm::rotate((float)(0.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
   Matrices.model *= (translateRectangle * rotateRectangle);
   MVP = VP * Matrices.model;
@@ -560,15 +669,41 @@ void draw ()
 
 }
 {
-	Matrices.model = glm::mat4(1.0f);
-
-  glm::mat4 translateRectangle = glm::translate (glm::vec3(-3.64f,0.0f, 0.0f));        // glTranslatef
-  glm::mat4 rotateRectangle = glm::rotate((float)(1.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
+  Matrices.model = glm::mat4(1.0f);
+  glm::mat4 translateRectangle = glm::translate (glm::vec3(-3.64f,laser_movement, 0.0f));        // glTranslatef
+  glm::mat4 rotateRectangle = glm::rotate((float)(laser_rotatation*M_PI/2), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
   Matrices.model *= (translateRectangle * rotateRectangle);
   MVP = VP * Matrices.model;
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
   draw3DObject(laser["rotating"].object);
 
+}
+{
+  Matrices.model = glm::mat4(1.0f);
+  glm::mat4 translateRectangle = glm::translate (glm::vec3(0.0f,-1.8f, 0.0f));        // glTranslatef
+  glm::mat4 rotateRectangle = glm::rotate((float)(M_PI/4), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
+  Matrices.model *= (translateRectangle * rotateRectangle);
+  MVP = VP * Matrices.model;
+  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+  draw3DObject(mirror["mirror1"].object);
+}
+{
+  Matrices.model = glm::mat4(1.0f);
+  glm::mat4 translateRectangle = glm::translate (glm::vec3(0.0f,2.2f, 0.0f));        // glTranslatef
+  glm::mat4 rotateRectangle = glm::rotate((float)(-M_PI/4), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
+  Matrices.model *= (translateRectangle * rotateRectangle);
+  MVP = VP * Matrices.model;
+  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+  draw3DObject(mirror["mirror2"].object);
+}
+{
+  Matrices.model = glm::mat4(1.0f);
+  glm::mat4 translateRectangle = glm::translate (glm::vec3(3.5f,0.0f, 0.0f));        // glTranslatef
+  glm::mat4 rotateRectangle = glm::rotate((float)(M_PI/2), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
+  Matrices.model *= (translateRectangle * rotateRectangle);
+  MVP = VP * Matrices.model;
+  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+  draw3DObject(mirror["mirror3"].object);
 }
   glutSwapBuffers ();
 
@@ -699,12 +834,12 @@ void initGL (int width, int height)
 	createRectangle("rotating",As,As,As,As,0,0,0.1,0.45,"laser");
 
 	As.r=0.0;
-	As.g=0.0;
-	As.b=0.5;
-	createRectangle("miror1",As,As,As,As,0,0,0.05,0.9,"mirror")
-	createRectangle("miror2",As,As,As,As,0,0,0.05,0.9,"mirror")
-	createRectangle("miror3",As,As,As,As,0,0,0.05,0.9,"mirror")
-	createRectangle("miror4",As,As,As,As,0,0,0.05,0.9,"mirror")
+	As.g=0.8;
+	As.b=0.8;
+	createRectangle("mirror1",As,As,As,As,0.0,0.0,0.03,1.1,"mirror");
+	createRectangle("mirror2",As,As,As,As,0,0,0.03,1.1,"mirror");
+	createRectangle("mirror3",As,As,As,As,0,0,0.03,1.1,"mirror");
+
 	cout << "VENDOR: " << glGetString(GL_VENDOR) << endl;
 	cout << "RENDERER: " << glGetString(GL_RENDERER) << endl;
 	cout << "VERSION: " << glGetString(GL_VERSION) << endl;
