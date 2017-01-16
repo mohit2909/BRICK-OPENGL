@@ -6,7 +6,7 @@
 #include <GL/glew.h>
 #include <GL/glu.h>
 #include <GL/freeglut.h>
-#include <ctime>
+#include <time.h>
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
@@ -226,9 +226,9 @@ map <string,Sprite> red_bucket;
 map <string,Sprite> green_bucket;
 map <string,Sprite>  mirror;
 map <string,Sprite> Scorecard;
-map <string,Sprite>  red_brick;
-map <string,Sprite>  green_brick;
-map <string,Sprite>  black_brick;
+vector <Sprite>  red_brick;
+vector <Sprite>  green_brick;
+vector <Sprite>  black_brick;;
 map <string,Sprite>  laser;
 map <string,Sprite> wall;
 float triangle_rot_dir = 1;
@@ -239,6 +239,9 @@ float red_bucket_movement=0;
 float green_bucket_movement=0;
 bool triangle_rot_status = true;
 bool rectangle_rot_status = true;
+time_t last_fall;
+long int count=0;
+
 /*pair<float,float> moveObject(string name, float dx, float dy) {
     objects[name].x+=dx;
     objects[name].y+=dy;
@@ -357,7 +360,7 @@ void keyboardSpecialDown (int key, int x, int y)
 {
 }
 
-/* Executed when a special key is released */
+/* Executed when a special k ey is released */
 void keyboardSpecialUp (int key, int x, int y)
 {
 	switch(key)
@@ -367,10 +370,14 @@ void keyboardSpecialUp (int key, int x, int y)
 			if(glutGetModifiers()== GLUT_ACTIVE_CTRL)
 			{
 				red_bucket_movement-=0.2;
+				if(red_bucket_movement<-0.6)
+					red_bucket_movement=-0.6;
 			}
 			if(glutGetModifiers()== GLUT_ACTIVE_SHIFT)
 			{
 				green_bucket_movement-=0.2;
+				if(green_bucket_movement<-4.6)
+					green_bucket_movement=-4.6;
 			}
 			
 			break;
@@ -440,7 +447,7 @@ void reshapeWindow (int width, int height)
     Matrices.projection = glm::ortho(-4.0f, 4.0f, -4.0f, 4.0f, 0.1f, 500.0f);
 }
 
-VAO *triangle, *rectangle, * line;
+VAO *triangle, *rectangle, * line,* fireball;
 
 // Creates the  object used in this sample code
 void drawline(double x1,double y1,double x2,double y2,COLOR A)
@@ -476,7 +483,42 @@ void createTriangle ()
   // create3DObject creates and returns a handle to a VAO that can be used later
   triangle = create3DObject(GL_TRIANGLES, 3, vertex_buffer_data, color_buffer_data, GL_LINE);
 }
+void create_fireball(float a, float b ,float radius1)
+{
 
+	int i,j;
+	// GLfloat x1= 0;//4.0f*cos(final_increments*5*DEGTORAD);
+	//GLfloat y1= 0;// 4.0f*sin(final_increments*5*DEGTORAD);
+	//GLfloat radius1=0.3;
+	//GLfloat PI=3.14f;
+	double triangleAmount = 20;
+	int triangle = 20; //# of triangles used to draw circle
+	//  cout<<"Draw circle";
+
+	//GLfloat radius = 0.8f; //radius
+	float twicePi = 2.0* M_PI;
+
+	//glBegin(GL_TRIANGLE_FAN);
+	//glVertex2f(x, y); // center of circle
+	GLfloat vertex_buffer_data[500];
+	GLfloat color_buffer_data [500];
+	for(i = 0,j=0; i <= 3*triangle;i++) //a and b are circle corrdinates
+	{
+		vertex_buffer_data[j++]= a + (radius1 * cos((i *  twicePi) / triangleAmount)); 
+		vertex_buffer_data[j++]=b + (radius1 * sin((i * twicePi) / triangleAmount));
+		vertex_buffer_data[j++]=0; 
+		vertex_buffer_data[j++]= a + (radius1 * cos(((i+1) *  twicePi) / triangleAmount)); 
+		vertex_buffer_data[j++]=a + (radius1 * sin(((i+1) * twicePi) / triangleAmount));
+		vertex_buffer_data[j++]=0;
+		vertex_buffer_data[j++]=a;
+		vertex_buffer_data[j++]=b;
+		vertex_buffer_data[j++]=0;
+	}
+	for(i = 0; i <= 9*triangle;i++) 
+		color_buffer_data[i]=0.0;
+
+	fireball = create3DObject(GL_TRIANGLES,60,vertex_buffer_data,color_buffer_data,GL_FILL);
+}
 void createRectangle (string name, COLOR colorA, COLOR colorB, COLOR colorC, COLOR colorD, float x, float y, float height, float width, string component)
 {
     // GL3 accepts only Triangles. Quads are not supported
@@ -531,7 +573,15 @@ void createRectangle (string name, COLOR colorA, COLOR colorB, COLOR colorC, COL
     }
     if(component=="red_brick")
     {
-    	red_brick[name]=vishsprite;
+    	red_brick.push_back(vishsprite);
+    }
+    if(component=="green_brick")
+    {
+    	green_brick.push_back(vishsprite);
+    }
+    if(component=="black_brick")
+    {
+    	black_brick.push_back(vishsprite);
     }
     if(component=="laser")
     	laser[name]=vishsprite;
@@ -553,9 +603,11 @@ void draw ()
 
   // use the loaded shader program
   // Don't change unless you know what you are doing
-  if(game_over==true)
-  	return;
+ // if(game_over==true)
+  //	return;
   glUseProgram (programID);
+  
+//  
 
   // Eye - Location of camera. Don't change unless you are sure!!
   glm::vec3 eye ( 5*cos(camera_rotation_angle*M_PI/180.0f), 0, 5*sin(camera_rotation_angle*M_PI/180.0f) );
@@ -590,15 +642,15 @@ void draw ()
 
   /* Render your scene */
 
-  glm::mat4 translateTriangle = glm::translate (glm::vec3(-2.0f, 0.0f, 0.0f)); // glTranslatef
+  glm::mat4 translateTriangle = glm::translate (glm::vec3(0.0f, 0.0f, 0.0f)); // glTranslatef
   glm::mat4 rotateTriangle = glm::rotate((float)(triangle_rotation*M_PI/180.0f), glm::vec3(0,0,1));  // rotate about vector (1,0,0)
   glm::mat4 triangleTransform = translateTriangle * rotateTriangle;
   Matrices.model *= triangleTransform; 
   MVP = VP * Matrices.model; // MVP = p * V * M
-
+  
   //  Don't change unless you are sure!!
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
-
+draw3DObject(fireball);
   // draw3DObject draws the VAO given to it using current MVP matrix
 
  { 
@@ -610,8 +662,11 @@ void draw ()
   MVP = VP * Matrices.model;
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
+  red_bucket["red_bucket"].x=-2.0f+red_bucket_movement;
+  red_bucket["red_bucket"].y=-3.3f;
   // draw3DObject draws the VAO given to it using current MVP matrix
   draw3DObject(red_bucket["red_bucket"].object);
+ // cout << red_bucket["red_bucket"].x<<endl;
 }
 {
   Matrices.model = glm::mat4(1.0f);
@@ -624,6 +679,8 @@ void draw ()
 
   // draw3DObject draws the VAO given to it using current MVP matrix
   draw3DObject(green_bucket["green_bucket"].object);
+  green_bucket["green_bucket"].x=2.0f+green_bucket_movement;
+  green_bucket["green_bucket"].y=-3.3f;
   // Swap the frame buffers
  }
  {
@@ -635,6 +692,8 @@ void draw ()
   MVP = VP * Matrices.model;
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
   draw3DObject(wall["left_wall"].object);
+  wall["left_wall"].x=-3.98f;
+  wall["left_wall"].y=0.0f;
  }
  {
  	Matrices.model = glm::mat4(1.0f);
@@ -645,7 +704,8 @@ void draw ()
   MVP = VP * Matrices.model;
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
   draw3DObject(wall["right_wall"].object);
-
+  wall["right_wall"].x=3.98f;
+  wall["right_wall"].y=0.0f;
  }
  {
  	Matrices.model = glm::mat4(1.0f);
@@ -656,6 +716,8 @@ void draw ()
   MVP = VP * Matrices.model;
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
   draw3DObject(wall["bottom_wall"].object);
+  wall["bottom_wall"].x=0.0f;
+  wall["bottom_wall"].y=-3.9f;
 }
 {
 	Matrices.model = glm::mat4(1.0f);
@@ -666,7 +728,8 @@ void draw ()
   MVP = VP * Matrices.model;
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
   draw3DObject(laser["non-rotating"].object);
-
+  laser["non-rotating"].x=-3.78;
+  laser["non-rotating"].y=laser_movement;
 }
 {
   Matrices.model = glm::mat4(1.0f);
@@ -676,7 +739,9 @@ void draw ()
   MVP = VP * Matrices.model;
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
   draw3DObject(laser["rotating"].object);
-
+  laser["rotating"].x=-3.64;
+  laser["rotating"].y=laser_movement;
+  laser["rotating"].angle=laser_rotatation*M_PI/2;
 }
 {
   Matrices.model = glm::mat4(1.0f);
@@ -686,6 +751,10 @@ void draw ()
   MVP = VP * Matrices.model;
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
   draw3DObject(mirror["mirror1"].object);
+  mirror["mirror1"].x=0.0f;
+  mirror["mirror1"].y=-1.8f;
+  mirror["mirror1"].angle=M_PI/4;
+
 }
 {
   Matrices.model = glm::mat4(1.0f);
@@ -695,6 +764,9 @@ void draw ()
   MVP = VP * Matrices.model;
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
   draw3DObject(mirror["mirror2"].object);
+  mirror["mirror2"].x=0.0f;
+  mirror["mirror2"].y=-2.2f;
+  mirror["mirror2"].angle=-M_PI/4;
 }
 {
   Matrices.model = glm::mat4(1.0f);
@@ -704,22 +776,133 @@ void draw ()
   MVP = VP * Matrices.model;
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
   draw3DObject(mirror["mirror3"].object);
+  mirror["mirror3"].x=3.5f;
+  mirror["mirror3"].y=0.0f;
+  mirror["mirror3"].angle=0;
 }
+time_t now;
+time(&now);
+if(difftime(now,last_fall)>0.5)
+{
+	double position=rand()%20;
+	long int colour=rand()%3+1;
+	string brick_name;
+
+	COLOR col;
+	if(colour==1)
+	{
+		col.r=1.0;
+		col.b=0.0;
+		col.g=0.0;
+		brick_name="red_brick";
+	}
+	if(colour==2)
+	{
+		col.r=0.0;
+		col.b=0.0;
+		col.g=1.0;
+		brick_name="green_brick";
+			
+	}
+	if(colour==3)
+	{
+		col.r=0.0;
+		col.b=0.0;
+		col.g=0.0;
+		brick_name="black_brick";
+	}
+	count++;
+	if(count%2==1)
+	{
+		position=-position/10 -0.7;
+	}
+	else
+	{
+		
+		position/=10;
+		position+=0.7;
+		
+	}
+	createRectangle("brick",col,col,col,col,position,4.0,0.2,0.2,brick_name);
+	time(&last_fall);
+}
+for(vector<Sprite> :: iterator it=red_brick.begin();it!=red_brick.end();++it)
+{
+	Sprite temp=*it;
+ 	Matrices.model = glm::mat4(1.0f);
+  	glm::mat4 translateRectangle = glm::translate (glm::vec3(temp.x,temp.y, 0.0f));        // glTranslatef
+  	glm::mat4 rotateRectangle = glm::rotate((float)(0.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
+  	Matrices.model *= (translateRectangle * rotateRectangle);
+  	MVP = VP * Matrices.model;
+  	glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+  	draw3DObject(temp.object);	
+  	(*it).y=(*it).y-0.01;
+  	temp=*it;
+  	if(temp.y-red_bucket["red_bucket"].y<=(temp.height+red_bucket["red_bucket"].height)/2)
+  	{
+  		
+  		if(fabs(temp.x-red_bucket["red_bucket"].x)<=(temp.width+red_bucket["red_bucket"].width)/2)
+  		{
+  			score+=10;
+  		}
+  		
+  		red_brick.erase(it);
+   	}
+}
+for(vector<Sprite> :: iterator it=black_brick.begin();it!=black_brick.end();++it)
+{
+	Sprite temp=*it;
+ 	Matrices.model = glm::mat4(1.0f);
+  	glm::mat4 translateRectangle = glm::translate (glm::vec3(temp.x,temp.y, 0.0f));        // glTranslatef
+  	glm::mat4 rotateRectangle = glm::rotate((float)(0.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
+  	Matrices.model *= (translateRectangle * rotateRectangle);
+  	MVP = VP * Matrices.model;
+  	glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+  	draw3DObject(temp.object);	
+  	(*it).y=(*it).y-0.01;
+  	temp=*it;
+  	if(temp.y-red_bucket["red_bucket"].y<=(temp.height+red_bucket["red_bucket"].height)/2)
+  	{
+  		black_brick.erase(it);
+  		game_over=true;
+
+   	}
+}
+for(vector<Sprite> :: iterator it=green_brick.begin();it!=green_brick.end();++it)
+{
+	Sprite temp=*it;
+ 	Matrices.model = glm::mat4(1.0f);
+  	glm::mat4 translateRectangle = glm::translate (glm::vec3(temp.x,temp.y, 0.0f));        // glTranslatef
+  	glm::mat4 rotateRectangle = glm::rotate((float)(0.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
+  	Matrices.model *= (translateRectangle * rotateRectangle);
+  	MVP = VP * Matrices.model;
+  	glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+  	draw3DObject(temp.object);	
+  	(*it).y=(*it).y-0.01;
+  	temp=*it;
+  	if(temp.y-green_bucket["green_bucket"].y<=(temp.height+green_bucket["green_bucket"].height)/2)
+  	{
+  		
+  		if(fabs(temp.x-red_bucket["green_bucket"].x)<=(temp.width+red_bucket["green_bucket"].width)/2)
+  		{
+  			score+=10;
+  		}
+  		green_brick.erase(it);
+   	}
+}	
   glutSwapBuffers ();
-
-  // Increment angles
-// ! float increments = 1;
-
- // rectangle_tranlation+=increments*0.01;
-  //camera_rotation_angle++; // Simulating camera rotation
- // triangle_rotation = triangle_rotation + increments*triangle_rot_dir*triangle_rot_status;
- // rectangle_rotation = rectangle_rotation + increments*rectangle_rot_dir*rectangle_rot_status;
 }
 
 /* Executed when the program is idle (no I/O activity) */
 void idle () {
     // OpenGL should never stop drawing
     // can draw the same scene or a modified scene
+    if(game_over==true)
+    {
+    	cout << "Score is:" << score<<endl;
+    	exit(0);
+
+    }	
     draw (); // drawing same scene
 }
 
@@ -802,6 +985,8 @@ void initGL (int width, int height)
 	programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
 	// Get a handle for our "MVP" uniform
 	Matrices.MatrixID = glGetUniformLocation(programID, "MVP");
+	srand (time(NULL));
+	time(&last_fall);
 
 
 	reshapeWindow (width, height);
@@ -809,7 +994,7 @@ void initGL (int width, int height)
 	// Background color of the scene
 	glClearColor (1.0f, 1.0f, 1.0f, 1.0f); // R, G, B, A
 	glClearDepth (1.0f);
-
+	create_fireball(0.0,0.0,0.06);
 	glEnable (GL_DEPTH_TEST);
 	glDepthFunc (GL_LEQUAL);
 	COLOR As;
@@ -836,9 +1021,9 @@ void initGL (int width, int height)
 	As.r=0.0;
 	As.g=0.8;
 	As.b=0.8;
-	createRectangle("mirror1",As,As,As,As,0.0,0.0,0.03,1.1,"mirror");
-	createRectangle("mirror2",As,As,As,As,0,0,0.03,1.1,"mirror");
-	createRectangle("mirror3",As,As,As,As,0,0,0.03,1.1,"mirror");
+	createRectangle("mirror1",As,As,As,As,0.0,0.0,0.03,1.0,"mirror");
+	createRectangle("mirror2",As,As,As,As,0,0,0.03,1.0,"mirror");
+	createRectangle("mirror3",As,As,As,As,0,0,0.03,1.0,"mirror");
 
 	cout << "VENDOR: " << glGetString(GL_VENDOR) << endl;
 	cout << "RENDERER: " << glGetString(GL_RENDERER) << endl;
@@ -857,6 +1042,7 @@ int main (int argc, char** argv)
 
 	initGL (width, height);
     glutMainLoop ();
+
 
     return 0;
 }
